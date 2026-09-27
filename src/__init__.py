@@ -33,7 +33,15 @@ from .errors import (
 __version__ = "0.1.0"
 
 # Loaded lazily so `python -m src.report` does not import the module twice.
-_LAZY = {"PurpleTeamReport": "report", "DetectionExpectation": "report"}
+_LAZY = {
+    "PurpleTeamReport": "report",
+    "DetectionExpectation": "report",
+    "TimelineSpoofer": "timeline_spoofer",
+    "FileTimes": "timeline_spoofer",
+    "TimestompBackend": "timeline_spoofer",
+    "PortableBackend": "timeline_spoofer",
+    "WindowsBackend": "timeline_spoofer",
+}
 
 
 def __getattr__(name: str):
@@ -45,6 +53,13 @@ def __getattr__(name: str):
 
 if TYPE_CHECKING:  # for type checkers / IDEs only
     from .report import DetectionExpectation, PurpleTeamReport
+    from .timeline_spoofer import (
+        FileTimes,
+        PortableBackend,
+        TimelineSpoofer,
+        TimestompBackend,
+        WindowsBackend,
+    )
 
 __all__ = [
     "AuditEntry",
@@ -57,6 +72,11 @@ __all__ = [
     "Scope",
     "PurpleTeamReport",
     "DetectionExpectation",
+    "TimelineSpoofer",
+    "FileTimes",
+    "TimestompBackend",
+    "PortableBackend",
+    "WindowsBackend",
     "Technique",
     "CATALOG",
     "lookup",
