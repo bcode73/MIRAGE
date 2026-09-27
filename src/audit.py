@@ -6,16 +6,14 @@ is a primary deliverable: it lets the operator prove exactly what was done, lets
 the client reconcile those actions against their own telemetry, and drives a
 guaranteed rollback of every applied action at the end of the engagement.
 
-Integrity model
----------------
+Integrity model.
 Each entry stores the SHA-256 of the previous entry (``prev_hash``) plus the
 SHA-256 of its own canonical content (``entry_hash``), forming a hash chain: any
 edit, reorder, or deletion of a past entry breaks verification. When an HMAC key
 is supplied, each entry is additionally signed, so an attacker who rewrites the
 whole chain still cannot forge valid signatures without the key.
 
-Revert model
-------------
+Revert model.
 Reverting does not delete anything. The engine restores each applied action's
 recorded ``before`` state, then appends a new ``reverted`` entry that references
 the original. The record of both the change and its rollback is preserved.
@@ -131,8 +129,7 @@ class AuditJournal:
         if self.path.exists():
             self._load_and_verify()
 
-    # -- persistence -------------------------------------------------------
-
+    # persistence
     def _load_and_verify(self) -> None:
         entries: list[AuditEntry] = []
         for lineno, raw in enumerate(self.path.read_text(encoding="utf-8").splitlines(), start=1):
@@ -150,8 +147,7 @@ class AuditJournal:
             return None
         return hmac.new(self._hmac_key, entry_hash.encode("utf-8"), hashlib.sha256).hexdigest()
 
-    # -- reading -----------------------------------------------------------
-
+    # reading
     @property
     def entries(self) -> tuple[AuditEntry, ...]:
         return tuple(self._entries)
@@ -183,8 +179,7 @@ class AuditJournal:
                     raise IntegrityError(f"entry {entry.seq} has an invalid signature")
             prev = entry.entry_hash
 
-    # -- writing -----------------------------------------------------------
-
+    # writing
     def record(
         self,
         *,

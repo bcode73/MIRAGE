@@ -1,16 +1,16 @@
 """Purple-team detection report generator.
 
 Consumes an :class:`~src.audit.AuditJournal` and emits, for every emulated
-action, the telemetry a blue team should have captured -- mapped to MITRE ATT&CK
+action, the telemetry a blue team should have captured, mapped to MITRE ATT&CK
 via :mod:`src.attack`. The output is meant to be diffed against the SOC's own
 SIEM/EDR alerts: any expectation with no corresponding detection is a coverage
 gap and a finding for the engagement report.
 
 Three renderings are produced:
 
-* ``to_dict`` / JSON  -- machine-readable, for tooling and diffing.
-* ``to_markdown``     -- human-readable, drops straight into a report.
-* ``to_navigator_layer`` -- an ATT&CK Navigator layer highlighting exercised
+* ``to_dict`` / JSON: machine-readable, for tooling and diffing.
+* ``to_markdown``: human-readable, drops straight into a report.
+* ``to_navigator_layer``: an ATT&CK Navigator layer highlighting exercised
   techniques, for import into the MITRE ATT&CK Navigator.
 """
 
@@ -97,8 +97,7 @@ class PurpleTeamReport:
     def from_journal(cls, journal: AuditJournal, profile: EngagementProfile | None = None, **kw) -> "PurpleTeamReport":
         return cls(journal.entries, profile, **kw)
 
-    # -- core --------------------------------------------------------------
-
+    # core
     def expectations(self) -> list[DetectionExpectation]:
         out: list[DetectionExpectation] = []
         for entry in self._all_entries:
@@ -160,8 +159,7 @@ class PurpleTeamReport:
             row["action_count"] += 1
         return [counts[k] for k in sorted(counts)]
 
-    # -- renderings --------------------------------------------------------
-
+    # renderings
     def to_dict(self) -> dict[str, Any]:
         expectations = self.expectations()
         coverage = self.attack_coverage()
@@ -276,8 +274,7 @@ class PurpleTeamReport:
             lines.append("")
         return "\n".join(lines).rstrip() + "\n"
 
-    # -- file output -------------------------------------------------------
-
+    # file output
     def write_files(self, out_dir: str | Path, *, prefix: str = "mirage-report") -> dict[str, Path]:
         out = Path(out_dir)
         out.mkdir(parents=True, exist_ok=True)

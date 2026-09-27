@@ -72,8 +72,7 @@ class EngagementContext:
         )
         return cls(profile, journal, registry, dry_run=dry_run)
 
-    # -- authorization -----------------------------------------------------
-
+    # authorization
     def authorize(
         self,
         *,
@@ -92,8 +91,7 @@ class EngagementContext:
         else:
             raise ValueError(f"unknown target_kind {target_kind!r}")
 
-    # -- action execution --------------------------------------------------
-
+    # action execution
     def perform(
         self,
         *,
@@ -149,8 +147,7 @@ class EngagementContext:
             status=STATUS_APPLIED,
         )
 
-    # -- rollback ----------------------------------------------------------
-
+    # rollback
     def revert(self, *, strict: bool = True) -> RevertResult:
         """Roll back every applied action recorded in the journal."""
         return RevertEngine(self.journal, self.registry).revert_all(strict=strict)

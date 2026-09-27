@@ -12,7 +12,7 @@ This layer is deliberately restrictive and defaults to deny:
 * An action on a host that is not listed is refused.
 * A target that is not explicitly in scope is refused.
 * A target that matches the denylist is refused even if it also matches an
-  allow rule -- denies always win.
+  allow rule; denies always win.
 
 The denylist ships with defaults that block target classes with no legitimate
 adversary-emulation purpose (for example, tampering with other operating-system
@@ -159,8 +159,7 @@ class EngagementProfile:
     dry_run_default: bool = True
     metadata: Mapping[str, Any] = field(default_factory=dict)
 
-    # -- loading -----------------------------------------------------------
-
+    # loading
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "EngagementProfile":
         required_strings = (
@@ -231,8 +230,7 @@ class EngagementProfile:
             raise ConfigError("engagement profile must be a JSON object")
         return cls.from_dict(data)
 
-    # -- authorization -----------------------------------------------------
-
+    # authorization
     def is_active(self, now: datetime | None = None) -> bool:
         now = now or datetime.now(timezone.utc)
         return self.starts_at <= now < self.expires_at
