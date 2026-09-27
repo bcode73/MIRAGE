@@ -186,6 +186,22 @@ def default_backend() -> TimestompBackend:
     return WindowsBackend() if sys.platform == "win32" else PortableBackend()
 
 
+def register_reverters(registry, backend: TimestompBackend | None = None) -> None:
+    """Register this module's reverters so revert works in a fresh process.
+
+    The audit journal records the action name and before-state, but the function
+    that undoes an action lives in code. A standalone ``mirage revert`` therefore
+    has to rebuild the reverter from the module rather than relying on an action
+    having been performed in the same process.
+    """
+    be = backend or default_backend()
+
+    def _revert(entry) -> None:
+        be.apply(entry.target, FileTimes.from_dict(entry.before))
+
+    registry.register(ACTION_SET, _revert)
+
+
 class TimelineSpoofer:
     """Authorized, audited, reversible file-timestamp manipulation (T1070.006)."""
 
