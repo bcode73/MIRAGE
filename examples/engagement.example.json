@@ -1,0 +1,29 @@
+{
+  "engagement_id": "ACME-2026-RT-014",
+  "client": "ACME Corp",
+  "operator": "j.doe@redteam.example",
+  "authorized_by": "s.smith@acme.example (CISO)",
+  "roe_reference": "SOW-2026-014 / RoE v3, signed 2026-09-01",
+  "starts_at": "2026-09-27T00:00:00Z",
+  "expires_at": "2026-10-04T00:00:00Z",
+  "allowed_hosts": ["LAB-WIN10-01", "LAB-WIN10-02"],
+  "techniques": ["T1070.006", "T1070.001", "T1562.002"],
+  "dry_run_default": true,
+  "scope": {
+    "allowed_paths": [
+      "C:/RedTeamLab/*",
+      "C:/Users/Public/Documents/*"
+    ],
+    "allowed_registry_keys": [
+      "hkcu/software/microsoft/windows/currentversion/explorer/recentdocs/*"
+    ],
+    "denied_paths": [
+      "C:/Users/*/Desktop/*"
+    ],
+    "denied_registry_keys": []
+  },
+  "metadata": {
+    "notes": "Purple-team detection validation. All actions must be reverted before EOE.",
+    "detection_owner": "soc@acme.example"
+  }
+}
