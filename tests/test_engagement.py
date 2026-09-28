@@ -130,3 +130,16 @@ def test_registry_scope(profile_dict):
 def test_scope_rejects_non_list():
     with pytest.raises(ConfigError):
         Scope.from_dict({"allowed_paths": "C:/nope"})
+
+
+def test_channel_scope():
+    scope = Scope.from_dict({
+        "allowed_channels": ["Security", "Microsoft-Windows-*"],
+        "denied_channels": ["Microsoft-Windows-Secret/Debug"],
+    })
+    scope.check_channel("security")                       # case-insensitive
+    scope.check_channel("Microsoft-Windows-Sysmon/Operational")  # glob
+    with pytest.raises(ScopeError):
+        scope.check_channel("Application")                # not allowed
+    with pytest.raises(ScopeError):
+        scope.check_channel("Microsoft-Windows-Secret/Debug")  # deny precedence

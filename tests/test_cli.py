@@ -106,3 +106,43 @@ def test_missing_profile_errors(tmp_path, target_file):
 def test_info(tmp_path, profile_file):
     rc = main(["info", "--profile", str(profile_file)])
     assert rc == 0
+
+
+@pytest.fixture
+def broad_profile_file(tmp_path):
+    data = make_profile_dict(
+        allowed_hosts=["*"],
+        techniques=["T1070.006", "T1112", "T1562.002"],
+        dry_run_default=False,
+        scope={
+            "allowed_paths": [f"{tmp_path}/*"],
+            "allowed_registry_keys": [r"HKCU\Software\Test\*"],
+            "allowed_channels": ["Security"],
+        },
+    )
+    p = tmp_path / "broad.json"
+    p.write_text(json.dumps(data), encoding="utf-8")
+    return p
+
+
+def test_registry_set_and_report(tmp_path, broad_profile_file):
+    journal = tmp_path / "run.jsonl"
+    rc = main(["registry", "set", "--profile", str(broad_profile_file), "--journal", str(journal),
+               r"HKCU\Software\Test\App", "Downloaded", "C:/loot/x.exe"])
+    assert rc == 0
+    assert journal.exists()
+    # revert wiring is reachable and exits cleanly
+    assert main(["revert", "--profile", str(broad_profile_file), "--journal", str(journal)]) == 0
+
+
+def test_eventlog_disable_cli(tmp_path, broad_profile_file):
+    journal = tmp_path / "run.jsonl"
+    rc = main(["eventlog", "disable", "--profile", str(broad_profile_file), "--journal", str(journal), "Security"])
+    assert rc == 0
+    assert journal.exists()
+
+
+def test_eventlog_out_of_scope_channel_cli(tmp_path, broad_profile_file):
+    journal = tmp_path / "run.jsonl"
+    rc = main(["eventlog", "disable", "--profile", str(broad_profile_file), "--journal", str(journal), "Application"])
+    assert rc == 2  # ScopeError -> exit 2

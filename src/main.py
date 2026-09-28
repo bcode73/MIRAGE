@@ -31,11 +31,13 @@ from pathlib import Path
 if __package__ in (None, ""):  # allow `python src/main.py` as well as `-m src.main`
     sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from src import timeline_spoofer
+from src import event_injector, registry_planter, timeline_spoofer
 from src.audit import AuditJournal, ReverterRegistry
 from src.context import EngagementContext
 from src.engagement import EngagementProfile
 from src.errors import ConfigError, MirageError
+from src.event_injector import EventLogController
+from src.registry_planter import RegistryPlanter
 from src.report import PurpleTeamReport
 from src.timeline_spoofer import TimelineSpoofer
 
@@ -63,9 +65,11 @@ def _load_hmac_key(args: argparse.Namespace) -> bytes | None:
     return None
 
 
-def _all_reverters(backend=None) -> ReverterRegistry:
+def _all_reverters() -> ReverterRegistry:
     registry = ReverterRegistry()
-    timeline_spoofer.register_reverters(registry, backend)
+    timeline_spoofer.register_reverters(registry)
+    registry_planter.register_reverters(registry)
+    event_injector.register_reverters(registry)
     return registry
 
 
@@ -113,6 +117,34 @@ def cmd_timestomp(args: argparse.Namespace) -> int:
         entry = spoofer.match_to(args.file, args.reference)
     else:  # pragma: no cover - argparse enforces choices
         raise ConfigError(f"unknown timestomp action {args.ts_action!r}")
+    _print_entry(entry)
+    if ctx.dry_run:
+        print("(dry run: no changes were applied)")
+    return 0
+
+
+def cmd_registry(args: argparse.Namespace) -> int:
+    ctx = _build_context(args)
+    planter = RegistryPlanter(ctx)
+    if args.reg_action == "set":
+        entry = planter.set_value(args.key, args.name, args.data, value_type=args.type)
+    elif args.reg_action == "remove":
+        entry = planter.remove_value(args.key, args.name)
+    elif args.reg_action == "recent-doc":
+        entry = planter.plant_recent_doc(args.name, args.path)
+    else:  # pragma: no cover - argparse enforces choices
+        raise ConfigError(f"unknown registry action {args.reg_action!r}")
+    _print_entry(entry)
+    if ctx.dry_run:
+        print("(dry run: no changes were applied)")
+    return 0
+
+
+def cmd_eventlog(args: argparse.Namespace) -> int:
+    ctx = _build_context(args)
+    controller = EventLogController(ctx)
+    enabled = args.el_action == "enable"
+    entry = controller.set_enabled(args.channel, enabled)
     _print_entry(entry)
     if ctx.dry_run:
         print("(dry run: no changes were applied)")
@@ -218,6 +250,44 @@ def build_parser() -> argparse.ArgumentParser:
     mt.add_argument("reference")
     mt.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
     mt.set_defaults(func=cmd_timestomp)
+
+    # registry
+    rg = sub.add_parser("registry", help="registry artifact emulation (T1112)")
+    rg_sub = rg.add_subparsers(dest="reg_action", required=True)
+
+    rset = rg_sub.add_parser("set", parents=[eng], help="set a registry value")
+    rset.add_argument("key")
+    rset.add_argument("name")
+    rset.add_argument("data")
+    rset.add_argument("--type", default="REG_SZ", help="registry value type (default: REG_SZ)")
+    rset.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
+    rset.set_defaults(func=cmd_registry)
+
+    rrm = rg_sub.add_parser("remove", parents=[eng], help="delete a registry value")
+    rrm.add_argument("key")
+    rrm.add_argument("name")
+    rrm.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
+    rrm.set_defaults(func=cmd_registry)
+
+    rrd = rg_sub.add_parser("recent-doc", parents=[eng], help="plant a RecentDocs artifact")
+    rrd.add_argument("name")
+    rrd.add_argument("path")
+    rrd.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
+    rrd.set_defaults(func=cmd_registry)
+
+    # eventlog
+    el = sub.add_parser("eventlog", help="event-log channel control (T1562.002)")
+    el_sub = el.add_subparsers(dest="el_action", required=True)
+
+    eld = el_sub.add_parser("disable", parents=[eng], help="disable a log channel")
+    eld.add_argument("channel")
+    eld.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
+    eld.set_defaults(func=cmd_eventlog)
+
+    ele = el_sub.add_parser("enable", parents=[eng], help="enable a log channel")
+    ele.add_argument("channel")
+    ele.add_argument("--dry-run", action=argparse.BooleanOptionalAction, default=None)
+    ele.set_defaults(func=cmd_eventlog)
 
     # revert
     rv = sub.add_parser("revert", parents=[eng], help="roll back every applied action in the journal")

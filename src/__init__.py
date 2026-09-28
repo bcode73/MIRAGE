@@ -41,6 +41,15 @@ _LAZY = {
     "TimestompBackend": "timeline_spoofer",
     "PortableBackend": "timeline_spoofer",
     "WindowsBackend": "timeline_spoofer",
+    "RegistryPlanter": "registry_planter",
+    "RegValue": "registry_planter",
+    "RegistryBackend": "registry_planter",
+    "InMemoryRegistryBackend": "registry_planter",
+    "WinRegBackend": "registry_planter",
+    "EventLogController": "event_injector",
+    "EventLogBackend": "event_injector",
+    "InMemoryEventLogBackend": "event_injector",
+    "WevtutilBackend": "event_injector",
 }
 
 
@@ -53,6 +62,19 @@ def __getattr__(name: str):
 
 if TYPE_CHECKING:  # for type checkers / IDEs only
     from .report import DetectionExpectation, PurpleTeamReport
+    from .event_injector import (
+        EventLogBackend,
+        EventLogController,
+        InMemoryEventLogBackend,
+        WevtutilBackend,
+    )
+    from .registry_planter import (
+        InMemoryRegistryBackend,
+        RegistryBackend,
+        RegistryPlanter,
+        RegValue,
+        WinRegBackend,
+    )
     from .timeline_spoofer import (
         FileTimes,
         PortableBackend,
@@ -77,6 +99,15 @@ __all__ = [
     "TimestompBackend",
     "PortableBackend",
     "WindowsBackend",
+    "RegistryPlanter",
+    "RegValue",
+    "RegistryBackend",
+    "InMemoryRegistryBackend",
+    "WinRegBackend",
+    "EventLogController",
+    "EventLogBackend",
+    "InMemoryEventLogBackend",
+    "WevtutilBackend",
     "Technique",
     "CATALOG",
     "lookup",

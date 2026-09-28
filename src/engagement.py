@@ -65,6 +65,11 @@ def _normalize_key(value: str) -> str:
     return value.strip().replace("\\", "/").strip("/").lower()
 
 
+def _normalize_channel(value: str) -> str:
+    """Normalize an event-log channel name (case-insensitive)."""
+    return value.strip().lower()
+
+
 def _matches(target: str, rule: str) -> bool:
     """True if ``target`` matches ``rule`` as an exact value, prefix, or glob."""
     if target == rule:
@@ -85,8 +90,10 @@ class Scope:
 
     allowed_paths: tuple[str, ...] = ()
     allowed_registry_keys: tuple[str, ...] = ()
+    allowed_channels: tuple[str, ...] = ()
     denied_paths: tuple[str, ...] = ()
     denied_registry_keys: tuple[str, ...] = ()
+    denied_channels: tuple[str, ...] = ()
 
     @classmethod
     def from_dict(cls, data: Mapping[str, Any]) -> "Scope":
@@ -104,8 +111,10 @@ class Scope:
         return cls(
             allowed_paths=norm_list("allowed_paths", _normalize_path),
             allowed_registry_keys=norm_list("allowed_registry_keys", _normalize_key),
+            allowed_channels=norm_list("allowed_channels", _normalize_channel),
             denied_paths=denied_paths,
             denied_registry_keys=denied_keys,
+            denied_channels=norm_list("denied_channels", _normalize_channel),
         )
 
     def check_path(self, path: str) -> None:
@@ -125,6 +134,15 @@ class Scope:
                 raise ScopeError(f"registry key is explicitly denied: {key!r} (rule {rule!r})")
         if not any(_matches(target, rule) for rule in self.allowed_registry_keys):
             raise ScopeError(f"registry key is not in the authorized scope: {key!r}")
+
+    def check_channel(self, channel: str) -> None:
+        """Raise :class:`ScopeError` unless ``channel`` is in scope and not denied."""
+        target = _normalize_channel(channel)
+        for rule in self.denied_channels:
+            if _matches(target, rule):
+                raise ScopeError(f"event-log channel is explicitly denied: {channel!r} (rule {rule!r})")
+        if not any(_matches(target, rule) for rule in self.allowed_channels):
+            raise ScopeError(f"event-log channel is not in the authorized scope: {channel!r}")
 
 
 def _parse_ts(value: Any, fieldname: str) -> datetime:

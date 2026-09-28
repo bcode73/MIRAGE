@@ -7,7 +7,7 @@
   "starts_at": "2026-09-27T00:00:00Z",
   "expires_at": "2026-10-04T00:00:00Z",
   "allowed_hosts": ["LAB-WIN10-01", "LAB-WIN10-02"],
-  "techniques": ["T1070.006", "T1070.001", "T1562.002"],
+  "techniques": ["T1070.006", "T1112", "T1562.002"],
   "dry_run_default": true,
   "scope": {
     "allowed_paths": [
@@ -15,12 +15,17 @@
       "C:/Users/Public/Documents/*"
     ],
     "allowed_registry_keys": [
-      "hkcu/software/microsoft/windows/currentversion/explorer/recentdocs/*"
+      "hkcu/software/microsoft/windows/currentversion/explorer/recentdocs/*",
+      "hkcu/software/microsoft/windows/currentversion/explorer/typedurls/*"
+    ],
+    "allowed_channels": [
+      "Microsoft-Windows-Sysmon/Operational"
     ],
     "denied_paths": [
       "C:/Users/*/Desktop/*"
     ],
-    "denied_registry_keys": []
+    "denied_registry_keys": [],
+    "denied_channels": []
   },
   "metadata": {
     "notes": "Purple-team detection validation. All actions must be reverted before EOE.",

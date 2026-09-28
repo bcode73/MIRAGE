@@ -34,7 +34,7 @@ from .audit import (
 )
 from .engagement import EngagementProfile
 
-TargetKind = str  # "path" or "registry"
+TargetKind = str  # "path", "registry", or "channel"
 
 
 class EngagementContext:
@@ -88,6 +88,8 @@ class EngagementContext:
             self.profile.scope.check_path(target)
         elif target_kind == "registry":
             self.profile.scope.check_registry_key(target)
+        elif target_kind == "channel":
+            self.profile.scope.check_channel(target)
         else:
             raise ValueError(f"unknown target_kind {target_kind!r}")
 
